@@ -29,6 +29,13 @@ defmodule ElixirPoolboyExample do
     pool_square(x)
   end
 
+  def parallel_pool(range) do
+    Enum.each(
+      range,
+      fn(x) -> spawn( fn() -> pool_square(x) end ) end
+    )
+  end
+
   defp pool_square(x) do
     :poolboy.transaction(
       pool_name(),

@@ -11,6 +11,7 @@ defmodule ElixirPoolboyExample.Worker do
 
   def handle_call(data, from, state) do
     result = ElixirPoolboyExample.Squarer.square(data)
+    IO.puts "Worker Reports: #{data} * #{data} = #{result}"
     {:reply, [result], state}
   end
 end
