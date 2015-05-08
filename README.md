@@ -288,3 +288,53 @@ utilising Poolbooy to limit the number of parallel processes.
 If Poolboy timing out is causing issues and the desired outcome is to
 have Poolboy just wait until free workers are available then that is
 possible and this will be covered in the next step of the tutorial.
+
+### Step Five
+
+To prevent Poolboy timing out, a third parameter can be passed to the
+`:poolboy.transaction` function that sets the default timeout for
+Poolboy. The parameter is given in milliseconds but also takes the
+`:infinity` atom to ensure that Poolboy never times out.
+
+  > #### Warning
+  > Using `:infinity` is not advised and is bad practice as it can
+  > cause your processes to wait indefinitely and lock up completely.
+  > It is advised to just enter a high number which will eventually
+  > time out. This step is just to show it can be done for the
+  > purpose of science :)
+
+```
+:poolboy.transaction(
+  pool_name(),
+  fn(pid) -> :gen_server.call(pid, x) end,
+  :infinity
+)
+```
+
+This is the updated Elixir [supervisor](https://github.com/thestonefox/elixir_poolboy_example/blob/065b7461fc4f54c25a63b519e5c368c440ffb1c9/lib/elixir_poolboy_example.ex)
+
+To highlight the issue of a slow running process, the Poolboy worker
+now has a sleep added to ensure each process uses at least 2 seconds
+of each worker.
+
+This is the updated [Worker](https://github.com/thestonefox/elixir_poolboy_example/blob/065b7461fc4f54c25a63b519e5c368c440ffb1c9/lib/elixir_poolboy_example/worker.ex)
+
+These additions to the code will highlight that Poolboy can now wait
+indefinitely for a worker and executing the code in iex shows the
+Poolboy workers are now working in batches of 3 processes at a time.
+
+```
+ElixirPoolboyExample.parallel_pool(1..5)
+
+# expected output:
+# 1 * 1 = 1
+# 3 * 3 = 9
+# 5 * 5 = 25
+
+# <pause waiting for workers to become available>
+
+# 4 * 4 = 16
+# 2 * 2 = 4
+```
+
+This [commit](https://github.com/thestonefox/elixir_poolboy_example/commit/065b7461fc4f54c25a63b519e5c368c440ffb1c9) shows how to ensure Poolboy waits infinitely for an available worker.
