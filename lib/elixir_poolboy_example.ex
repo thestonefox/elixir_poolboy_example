@@ -24,4 +24,15 @@ defmodule ElixirPoolboyExample do
 
     Supervisor.start_link(children, options)
   end
+
+  def basic_pool(x) do
+    pool_square(x)
+  end
+
+  defp pool_square(x) do
+    :poolboy.transaction(
+      pool_name(),
+      fn(pid) -> :gen_server.call(pid, x) end
+    )
+  end
 end

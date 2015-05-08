@@ -10,6 +10,7 @@ defmodule ElixirPoolboyExample.Worker do
   end
 
   def handle_call(data, from, state) do
-    {:reply, [], state}
+    result = ElixirPoolboyExample.Squarer.square(data)
+    {:reply, [result], state}
   end
 end
