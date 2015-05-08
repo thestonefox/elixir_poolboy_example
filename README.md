@@ -215,3 +215,76 @@ This is the updated Elixir [supervisor](https://github.com/thestonefox/elixir_po
 This [commit](https://github.com/thestonefox/elixir_poolboy_example/commit/06636639c9e8f61ea21770b3f8ee53c1cc609eef) shows how to implement the `Squarer.square` function
 call within the worker and provides a way to execute the function
 through a Poolboy transaction.
+
+### Step Four
+
+To run the `Squarer.square` function in parallel and in the background,
+it just needs to have the Poolboy transaction call spawned in a new
+process.
+
+However, as the transaction call is running in a spawned process, the
+result will no longer be returned.
+
+This is ideal for tasks that are long running and need to be run in the
+background where the response is not required by the calling function.
+
+To ensure the example still outputs something meaningful to show the
+code is working, the Worker has been updated to print out the current
+operation the function is performing with this line:
+
+```
+IO.puts "Worker Reports: #{data} * #{data} = #{result}"
+```
+
+This is the updated [Worker](https://github.com/thestonefox/elixir_poolboy_example/blob/6d94ccd668f8ec200a61c2d17c1ed1dc9905142e/lib/elixir_poolboy_example/worker.ex)
+
+The implementation of the parallel method simply loops over a range of
+numbers in a given list and for each one calls the `pool_square`
+function in a newly spawned process like so:
+
+```
+def parallel_pool(range) do
+  Enum.each(
+    range,
+    fn(x) -> spawn( fn() -> pool_square(x) end ) end
+  )
+end
+```
+
+This is the updated Elixir [supervisor](https://github.com/thestonefox/elixir_poolboy_example/blob/6d94ccd668f8ec200a61c2d17c1ed1dc9905142e/lib/elixir_poolboy_example.ex)
+
+This newly implemented function will now perform the calculations in
+parallel utilising the Poolboy workers to ensure system resources are
+not overloaded. Executing the new function in iex produces:
+
+```
+ElixirPoolboyExample.parallel_pool(1..5)
+
+# expected output:
+# 1 * 1 = 1
+# 3 * 3 = 9
+# 5 * 5 = 25
+# 4 * 4 = 16
+# 2 * 2 = 4
+```
+
+The expected output is not sequential because all requests to the
+`Squarer.square` function are done in parallel and it depends on which
+request gets picked up by a worker to be processed first and as there
+are only 3 maximum workers in the current configuration, not all
+requests will be made in parallel.
+
+This [commit](https://github.com/thestonefox/elixir_poolboy_example/commit/6d94ccd668f8ec200a61c2d17c1ed1dc9905142e) shows how the `Squarer.square` can be run in parallel
+utilising Poolbooy to limit the number of parallel processes.
+
+  > #### Warning
+  > If too many requests are made to Poolboy, such as an extremely
+  > high range is given `paralell_pool(1..1000000)` and there are
+  > not enough workers available to process the requests, then
+  > Poolboy will timeout after a default 5 seconds and no longer
+  > accept any new requests. This may be desirable to ensure locked
+  > or long running tasks don't lock up all of the workers.
+
+If Poolboy timing out is causing issues and the desired outcome is to
+have Poolboy just wait until free workers are available then that is
+possible and this will be covered in the next step of the tutorial.
