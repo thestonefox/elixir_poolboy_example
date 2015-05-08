@@ -10,6 +10,7 @@ defmodule ElixirPoolboyExample.Worker do
   end
 
   def handle_call(data, from, state) do
+    :timer.sleep(2000)
     result = ElixirPoolboyExample.Squarer.square(data)
     IO.puts "Worker Reports: #{data} * #{data} = #{result}"
     {:reply, [result], state}

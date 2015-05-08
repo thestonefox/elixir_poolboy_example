@@ -39,7 +39,8 @@ defmodule ElixirPoolboyExample do
   defp pool_square(x) do
     :poolboy.transaction(
       pool_name(),
-      fn(pid) -> :gen_server.call(pid, x) end
+      fn(pid) -> :gen_server.call(pid, x) end,
+      :infinity
     )
   end
 end
