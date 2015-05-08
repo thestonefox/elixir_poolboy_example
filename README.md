@@ -64,3 +64,86 @@ ElixirPoolboyExample.Squarer.square(5)
 ```
 
 That's as much as it does so far, next is to implement Poolboy!
+
+### Step Two
+
+Now there is a basic app that performs an operation that can be run
+in parallel, it's time to implement Poolboy to aid parallel running.
+
+Poolboy is an Erlang library maintained on GitHub and is available on [Hex.pm](https://hex.pm/packages/poolboy)
+so including it as a dependency is simply a case of adding it to the [Mixfile](https://github.com/thestonefox/elixir_poolboy_example/blob/1fe2c9df6a3c7c51df07a36c4dd93f437fc84426/mix.exs#L34)
+
+```
+defp deps do
+  [
+    { :poolboy, "~> 1.5" }
+  ]
+```
+
+Poolboy also needs adding as a dependency to the applications list
+within the [Mixfile](https://github.com/thestonefox/elixir_poolboy_example/blob/1fe2c9df6a3c7c51df07a36c4dd93f437fc84426/mix.exs#L19)
+otherwise a failure will occur when attempting to build an OTP release.
+
+```
+def application do
+  [
+    mod: {ElixirPoolboyExample, []},
+    applications: [:logger, :poolboy]
+  ]
+end
+```
+
+Because an addition has been added to the Mixfile, the dependencies
+will need to be fetched with `mix deps.get` and this will pull down
+and compile the specified version of Poolboy from Hex.
+
+To get Poolboy running, it just needs setting up to run as a child
+of the supervisor that has already been created. Poolboy also needs
+some configuring like so:
+
+```
+poolboy_config = [
+  {:name, {:local, pool_name()}},
+  {:worker_module, ElixirPoolboyExample.Worker},
+  {:size, 2},
+  {:max_overflow, 1}
+]
+```
+
+The config options are:
+
+  * **Name** - a sub-config tuple
+    * **Location** (`:global` or `:local`) - to determine where the pool is run
+    * **Pool Name** - an atom (constant) to provide a unique name for the pool to reference it for use
+  * **Worker Module** - the name of the module that will act as the Poolboy worker for dealing with requests
+  * **Size** - the number of workers that can be running at any given time
+  * **Max Overflow** - the number of backup workers that can be used if existing workers are being utilised
+
+As the pool name will be required to be constant across all calls to
+Poolboy, a basic function is implemented to return an atom that is the
+reference to the pool. This just makes it easier to change the name of
+the pool in one place rather than in a number of places.
+
+```
+defp pool_name() do
+  :example_pool
+end
+```
+
+With Poolboy configured, it will allow for 2 workers with 1 additional
+worker to run the specified process at any one time. In this example,
+only 3 `Worker` processes will be able to run in parallel. In reality,
+this number would be much higher to meet the demands of the hardware.
+
+This is the updated Elixir [supervisor](https://github.com/thestonefox/elixir_poolboy_example/blob/1fe2c9df6a3c7c51df07a36c4dd93f437fc84426/lib/elixir_poolboy_example.ex)
+
+The worker that is specified in the Poolboy configuration is simply a
+GenServer that PoolBoy uses to communicate to and basically works as a
+GenPool for all of the GenServer Workers it is using.
+
+At this point, a basic Worker implementation has been added that does
+not do anything other than satisfy the requirements of the Poolboy
+configuration within the supervisor. This is the current [Worker](https://github.com/thestonefox/elixir_poolboy_example/blob/1fe2c9df6a3c7c51df07a36c4dd93f437fc84426/lib/elixir_poolboy_example/worker.ex)
+
+This [commit](https://github.com/thestonefox/elixir_poolboy_example/commit/1fe2c9df6a3c7c51df07a36c4dd93f437fc84426) shows the set up required to make Poolboy a dependency
+and implement it as a child of the application supervisor.
