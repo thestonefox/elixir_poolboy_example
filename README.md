@@ -17,6 +17,34 @@ cd elixir_poolboy_example
 mix deps.get
 ```
 
+## Running
+
+To run the two provided tutorial functions:
+
+#### Sequential with response
+```
+iex -S mix
+
+iex(1)> ElixirPoolboyExample.basic_pool(5)
+
+# expected output: [25]
+
+```
+
+#### Parallel in background
+```
+iex -S mix
+
+iex(1)> ElixirPoolboyExample.parallel_pool(1..5)
+
+# expected output:
+# 1 * 1 = 1
+# 3 * 3 = 9
+# 5 * 5 = 25
+# 4 * 4 = 16
+# 2 * 2 = 4
+```
+
 ## Tutorial
 
 The aim of this tutorial is to demonstrate a usage of [Poolboy](https://github.com/devinus/poolboy)
