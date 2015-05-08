@@ -1,0 +1,2 @@
+defmodule ElixirPoolboyExample do
+end
