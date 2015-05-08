@@ -147,3 +147,71 @@ configuration within the supervisor. This is the current [Worker](https://github
 
 This [commit](https://github.com/thestonefox/elixir_poolboy_example/commit/1fe2c9df6a3c7c51df07a36c4dd93f437fc84426) shows the set up required to make Poolboy a dependency
 and implement it as a child of the application supervisor.
+
+### Step Three
+
+Integrating the Squarer module into the Poolboy worker is very easy
+as it just needs to be called from within the worker's `handle_call`
+function using the data parameter as the number to square.
+
+```
+def handle_call(data, from, state) do
+  result = ElixirPoolboyExample.Squarer.square(data)
+  {:reply, [result], state}
+end
+```
+
+The Square.square function is now called and the result is returned
+as the reply from the worker.
+
+This is the updated [Worker](https://github.com/thestonefox/elixir_poolboy_example/blob/06636639c9e8f61ea21770b3f8ee53c1cc609eef/lib/elixir_poolboy_example/worker.ex)
+
+When a Poolboy transaction is now created for the `:example_pool`,
+it will pass the given data to the `Squarer.square` function.
+
+Poolboy can be called within iex to test this worker is performing:
+
+```
+:poolboy.transaction(:example_pool, fn(pid) -> :gen_server.call(pid, 5) end)
+
+# expected output: [25]
+```
+
+This is how a Poolboy transaction is performed, which denotes which
+pool is to receive the message and a function that calls the GenServer
+passing in the message data as the second parameter.
+
+If a Poolboy worker is available to run the process then it will and
+return the results.
+
+To make things easier, this transaction function is wrapped in a helper
+function within the main application called `pool_square(x)` which
+simply takes a number and passes it off to Poolboy to process it with
+the `Squarer.square` implemented in the Poolboy worker.
+
+Now it is possible to write functions that initiate the process
+utilising Poolboy to manage the total number of desired processes.
+
+```
+def basic_pool(x) do
+  pool_square(x)
+end
+```
+
+The above function is a very simple implementation of squaring a number
+and it can be executed in iex like this:
+
+```
+ElixirPoolboyExample.basic_pool(5)
+
+# expected output: [25]
+```
+
+This function goes through a Poolboy transaction and displays the
+response, which is the square to the original given number.
+
+This is the updated Elixir [supervisor](https://github.com/thestonefox/elixir_poolboy_example/blob/06636639c9e8f61ea21770b3f8ee53c1cc609eef/lib/elixir_poolboy_example.ex)
+
+This [commit](https://github.com/thestonefox/elixir_poolboy_example/commit/06636639c9e8f61ea21770b3f8ee53c1cc609eef) shows how to implement the `Squarer.square` function
+call within the worker and provides a way to execute the function
+through a Poolboy transaction.
