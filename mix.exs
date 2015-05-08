@@ -16,7 +16,7 @@ defmodule ElixirPoolboyExample.Mixfile do
   def application do
     [
       mod: {ElixirPoolboyExample, []},
-      applications: [:logger]
+      applications: [:logger, :poolboy]
     ]
   end
 
@@ -30,6 +30,8 @@ defmodule ElixirPoolboyExample.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [
+      {:poolboy, "~> 1.5"}
+    ]
   end
 end
