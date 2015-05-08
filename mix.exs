@@ -14,7 +14,10 @@ defmodule ElixirPoolboyExample.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: [:logger]]
+    [
+      mod: {ElixirPoolboyExample, []},
+      applications: [:logger]
+    ]
   end
 
   # Dependencies can be Hex packages:
