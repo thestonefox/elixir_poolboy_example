@@ -15,4 +15,8 @@ defmodule ElixirPoolboyExample.Worker do
     IO.puts "Worker Reports: #{data} * #{data} = #{result}"
     {:reply, [result], state}
   end
+
+  def square(pid, value) do
+    :gen_server.call(pid, value)
+  end
 end
