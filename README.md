@@ -366,3 +366,47 @@ ElixirPoolboyExample.parallel_pool(1..5)
 ```
 
 This [commit](https://github.com/thestonefox/elixir_poolboy_example/commit/065b7461fc4f54c25a63b519e5c368c440ffb1c9) shows how to ensure Poolboy waits infinitely for an available worker.
+
+### Step Six
+
+Now everthing is working as expected, it's worth reviewing the code
+and cleaning it up where possible. A closer inspection of the Elixir [supervisor](https://github.com/thestonefox/elixir_poolboy_example/blob/065b7461fc4f54c25a63b519e5c368c440ffb1c9/lib/elixir_poolboy_example.ex#L42)
+shows that the `:gen_server.call/2` is actually coupling the client
+code (the supervisor) to the communication protocol for the worker.
+
+It would look cleaner if the supervisor could just call a function
+on the worker that had no knowledge of it using a `GenServer`.
+
+This is a simple case of creating a wrapper function in the worker
+module that handles the `:gen_server.call/2` function and then
+the supervisor can just call that function instead.
+
+The new wrapper function within `ElixirPoolboyExample.Worker` module
+looks like this:
+
+```
+def square(pid, value) do
+  :gen_server.call(pid, value)
+end
+```
+
+It simply encapsulates the `:gen_server.call/2` function inside the
+module that has the `GenServer` dependency.
+
+Now within the `ElixirPoolboyExample` module the new worker wrapper
+function can be called:
+
+```
+defp pool_square(x) do
+  :poolboy.transaction(
+    pool_name(),
+    fn(pid) -> ElixirPoolboyExample.Worker.square(pid, x) end,
+    :infinity
+  )
+end
+```
+
+This is common practice and provides a decoupled approach to the
+modules.
+
+This [commit](https://github.com/thestonefox/elixir_poolboy_example/commit/435588606bdca3bad271805a4ada9a499f5edc80) shows how to decouple the client from the worker communication protocol.
