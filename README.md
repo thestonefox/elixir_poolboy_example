@@ -303,7 +303,7 @@ are only 3 maximum workers in the current configuration, not all
 requests will be made in parallel.
 
 This [commit](https://github.com/thestonefox/elixir_poolboy_example/commit/6d94ccd668f8ec200a61c2d17c1ed1dc9905142e) shows how the `Squarer.square` can be run in parallel
-utilising Poolbooy to limit the number of parallel processes.
+utilising Poolboy to limit the number of parallel processes.
 
   > #### Warning
   > If too many requests are made to Poolboy, such as an extremely
