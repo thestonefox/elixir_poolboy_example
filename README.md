@@ -5,7 +5,7 @@ to manage and pool workers in [Elixir](https://github.com/elixir-lang/elixir)
 
 ## Prerequisites
 
-  * Erlang/OPT 17 [erts-6.4]
+  * Erlang/OTP 17 [erts-6.4]
   * [Elixir 1.0.4](https://github.com/elixir-lang/elixir)
 
 ## Installation
